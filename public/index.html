@@ -56,6 +56,8 @@
           locale: 'auto'
         });
 
+        var adapter = new RecogitoPlugins.LegacyStorage(anno);
+
         var toolToggle = document.getElementById('current-tool');
         toolToggle.addEventListener('click', function() {
           if (toolToggle.innerHTML == 'RECTANGLE') {

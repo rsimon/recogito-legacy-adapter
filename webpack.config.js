@@ -12,9 +12,10 @@ module.exports = {
   entry: resolveAppPath('src'),
   output: {
     filename: 'recogito-legacy-adapter.min.js',
-    library: 'RecogitoLegacyAdapter',
+    library: [ 'RecogitoPlugins', 'LegacyStorage' ],
     libraryTarget: 'umd',
-    umdNamedDefine: true
+    libraryExport: 'default',
+    pathinfo: true
   },
   performance: {
     hints: false
