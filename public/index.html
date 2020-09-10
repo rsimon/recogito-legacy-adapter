@@ -56,7 +56,11 @@
           locale: 'auto'
         });
 
-        var adapter = new RecogitoPlugins.LegacyStorage(anno);
+        // Attach the Recogito Legacy Storage Plugin
+        RecogitoPlugins.LegacyStorage(anno, {
+          documentId: 'mknvruu7oka8zl',
+          filepartId: '8fadf4bb-a2b1-4f53-9eb6-2a59fd070783'
+        });
 
         var toolToggle = document.getElementById('current-tool');
         toolToggle.addEventListener('click', function() {

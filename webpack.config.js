@@ -11,9 +11,9 @@ const resolveAppPath = relativePath => path.resolve(APP_DIR, relativePath);
 module.exports = {
   entry: resolveAppPath('src'),
   output: {
-    filename: 'recogito-legacy-adapter.min.js',
+    filename: 'r6o-plugin-legacystorage.min.js',
     library: [ 'RecogitoPlugins', 'LegacyStorage' ],
-    libraryTarget: 'umd',
+    libraryTarget: 'window',
     libraryExport: 'default',
     pathinfo: true
   },
@@ -52,7 +52,10 @@ module.exports = {
     hot: true,
     host: process.env.HOST || 'localhost',
     port: 3000,
-    publicPath: '/'
+    publicPath: '/',
+    proxy: {
+      '/api': 'http://localhost:9000'
+    }
   },
   plugins: [
     new HtmlWebpackPlugin ({
