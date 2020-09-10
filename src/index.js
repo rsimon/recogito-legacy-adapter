@@ -18,12 +18,14 @@ class LegacyStoragePlugin {
     annotates: {
       document_id: this.config.documentId,
       filepart_id: this.config.filepartId,
-      content_type: 'IMAGE_UPLOAD' // TODO
+      content_type: 'IMAGE_UPLOAD' // TODO may need to set this from outside via config. Legacy limitation...
     },
-    anchor: 'rect:x=10,y=10,w=200,h=200', // TODO 
-    bodies: [
-      { type: 'COMMENT', last_modified_by: 'rainer', value: 'Plugin Test!' }
-    ]
+    anchor: 'rect:x=10,y=10,w=200,h=200', // TODO generate from annotation target
+    bodies: [{ 
+      type: 'COMMENT', // Generate from body type
+      last_modified_by: 'rainer', // Config setting?
+      value: 'Plugin Test!' // From body 
+    }]
   })
 
   /** Vice versa, this crosswalks from legacy to WebAnno **/
