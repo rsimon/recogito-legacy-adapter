@@ -14,19 +14,42 @@ class LegacyStoragePlugin {
    * Legacy Recogito has a W3C WebAnno-like, but proprietary, annotation
    * format. This function performs the crosswalk to the legacy format 
    */
-  toLegacyAnnotation = webanno => ({
-    annotates: {
-      document_id: this.config.documentId,
-      filepart_id: this.config.filepartId,
-      content_type: 'IMAGE_UPLOAD' // TODO may need to set this from outside via config. Legacy limitation...
-    },
-    anchor: 'rect:x=10,y=10,w=200,h=200', // TODO generate from annotation target
-    bodies: [{ 
-      type: 'COMMENT', // Generate from body type
-      last_modified_by: 'rainer', // Config setting?
-      value: 'Plugin Test!' // From body 
-    }]
-  })
+  toLegacyAnnotation = webanno => {
+    const fragment = webanno.target.selector.value;
+
+    if (!fragment.startsWith('xywh=pixel:'))
+      throw new Error('Recogito legacy storage supports rectangles only');
+
+    // Convert media fragment syntax (xywh=pixel:292,69,137,125) to 
+    // proprietary Recogito syntax (rect:x=292,y=69,w=137,h=125)
+    const [ _, coords ] = fragment.split(':');
+    const [ x, y, w, h] = coords.split(',').map(parseFloat);
+
+    const toLegacyBody = body => {
+      const type = body.type === 'TextualBody' ? 
+        body.purpose === 'tagging' ? 'TAG' : 'COMMENT' :
+        null;
+
+      if (type === null) 
+        throw new Error(`Unsupported body type: ${body.type}`);
+
+      return { 
+        type, 
+        last_modified_by: this.config.currentUser, 
+        value: body.value 
+      };
+    }
+
+    return {
+      annotates: {
+        document_id: this.config.documentId,
+        filepart_id: this.config.filepartId,
+        content_type: this.config.contentType
+      },
+      anchor: `rect:x=${x},y=${y},w=${w},h=${h}`, 
+      bodies: webanno.body.map(toLegacyBody)
+    };
+  }
 
   /** Vice versa, this crosswalks from legacy to WebAnno **/
   fromLegacyAnnotation = legacy => {
