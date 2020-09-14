@@ -95,7 +95,8 @@ class LegacyStoragePlugin {
         value: body.value,
         creator: {
           id: body.last_modified_by
-        }
+        },
+        created: body.last_modified_at
       };
     };
 
