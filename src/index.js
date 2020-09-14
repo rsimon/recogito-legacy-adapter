@@ -25,7 +25,7 @@ class LegacyStoragePlugin {
    * Legacy Recogito has a W3C WebAnno-like, but proprietary, annotation
    * format. This function performs the crosswalk to the legacy format 
    */
-  toLegacyAnnotation = webanno => {
+  toLegacyAnnotation = (webanno, keepId) => {
     const fragment = webanno.target.selector.value;
 
     if (!fragment.startsWith('xywh=pixel:'))
@@ -51,7 +51,7 @@ class LegacyStoragePlugin {
       };
     }
 
-    return {
+    const legacy = {
       annotates: {
         document_id: this.config.documentId,
         filepart_id: this.config.filepartId,
@@ -60,6 +60,14 @@ class LegacyStoragePlugin {
       anchor: `rect:x=${x},y=${y},w=${w},h=${h}`, 
       bodies: webanno.body.map(toLegacyBody)
     };
+
+    // If this is an UPDATE, we need to keep the ID.
+    // If it's a CREATE, we need to remove it - this is how
+    // legacy Recogito tells these two operations apart.
+    if (keepId)
+      legacy.annotation_id = webanno.id;
+
+    return legacy;
   }
 
   /** Vice versa, this crosswalks from legacy to WebAnno **/
@@ -97,21 +105,29 @@ class LegacyStoragePlugin {
       type: 'Annotation',
       body: legacy.bodies.map(toWebAnnoBody),
       target: {
-        selector: [{
+        selector: {
           type: 'FragmentSelector',
           conformsTo: 'http://www.w3.org/TR/media-frags/',
           value: `xywh=pixel:${x},${y},${w},${h}`
-        }]
+        }
       }
     }
   }
 
-  onCreateAnnotation = annotation => {
-    axios.post('/api/annotation', this.toLegacyAnnotation(annotation));
+  onCreateAnnotation = (annotation, overrideId) => {
+    axios.post('/api/annotation', this.toLegacyAnnotation(annotation)).then(response => {
+      const { annotation_id } = response.data;
+      overrideId(annotation_id);
+    });
   }
 
-  onUpdateAnnotation = (annotation, previous) => {
-    console.log('updated', annotation);
+  /** 
+   * Note that legacy Recogito only has a single 'upsert' operation.
+   * Therefore, updating works exactly like create. The only difference
+   * is that we don't need ot update the ID.
+   */
+  onUpdateAnnotation = annotation => {
+    axios.post('/api/annotation', this.toLegacyAnnotation(annotation, true));
   }
 
   onDeleteAnnotation = annotation => {
