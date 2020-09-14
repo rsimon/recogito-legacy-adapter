@@ -64,7 +64,6 @@ class LegacyStoragePlugin {
 
   /** Vice versa, this crosswalks from legacy to WebAnno **/
   fromLegacyAnnotation = legacy => {
-
     // Reminder: proprietary Recogito syntax is rect:x=292,y=69,w=137,h=125
     if (!legacy.anchor.startsWith('rect:x='))
       throw new Error('Recogito legacy storage supports rectangles only');
@@ -116,7 +115,7 @@ class LegacyStoragePlugin {
   }
 
   onDeleteAnnotation = annotation => {
-    console.log('deleted', annotation);
+    axios.delete(`/api/annotation/${annotation.id}`);
   }
 
 }
