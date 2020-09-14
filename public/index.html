@@ -54,7 +54,11 @@
       (function() {
         var anno = Annotorious.init({
           image: 'hallstatt',
-          locale: 'auto'
+          locale: 'auto',
+          widgets: [
+            'TAG',
+            { widget: 'COMMENT', editable: 'MINE_ONLY' }
+          ]
         });
 
         // User account name in Recogito
