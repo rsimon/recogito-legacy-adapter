@@ -56,12 +56,15 @@
           locale: 'auto'
         });
 
-        // Attach the Recogito Legacy Storage Plugin
+        // User account name in Recogito
+        anno.setAuthInfo({ id: 'rainer' });
+
+        // Init the Recogito Legacy Storage Plugin with document properties
         RecogitoPlugins.LegacyStorage(anno, {
           documentId: 'mknvruu7oka8zl',
           filepartId: '8fadf4bb-a2b1-4f53-9eb6-2a59fd070783',
-          contentType: 'IMAGE_UPLOAD',
-          currentUser: 'rainer'
+          partSequenceNumber: 1,
+          contentType: 'IMAGE_UPLOAD'
         });
 
         var toolToggle = document.getElementById('current-tool');

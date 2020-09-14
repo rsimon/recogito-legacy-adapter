@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+/**
+ * TODO SUPPORT TEXT ANNOTATION!
+ */
 class LegacyStoragePlugin {
 
   constructor(anno, config) {
@@ -8,6 +11,14 @@ class LegacyStoragePlugin {
     anno.on('createAnnotation', this.onCreateAnnotation);
     anno.on('updateAnnotation', this.onUpdateAnnotation);
     anno.on('deleteAnnotation', this.onDeleteAnnotation);
+
+    // Fetch annotations
+    const url = `/api/document/${this.config.documentId}/part/${this.config.partSequenceNumber}/annotations`;
+
+    axios.get(url).then(response => {
+      const annotations = response.data.map(this.fromLegacyAnnotation);
+      anno.setAnnotations(annotations);
+    });
   }
 
   /** 
@@ -35,7 +46,7 @@ class LegacyStoragePlugin {
 
       return { 
         type, 
-        last_modified_by: this.config.currentUser, 
+        last_modified_by: body.creator.id, 
         value: body.value 
       };
     }
@@ -54,6 +65,46 @@ class LegacyStoragePlugin {
   /** Vice versa, this crosswalks from legacy to WebAnno **/
   fromLegacyAnnotation = legacy => {
 
+    // Reminder: proprietary Recogito syntax is rect:x=292,y=69,w=137,h=125
+    if (!legacy.anchor.startsWith('rect:x='))
+      throw new Error('Recogito legacy storage supports rectangles only');
+    
+    const [ _, tuples ] = legacy.anchor.split(':');
+    const [ x, y, w, h ] = tuples.split(',').map(t => parseFloat(t.split('=')[1]))
+
+    const toWebAnnoBody = body => {
+      let purpose = null;
+      
+      if (body.type === 'TAG')
+        purpose = 'tagging';
+      else if (body.type === 'COMMENT')
+        purpose = 'commenting';
+      else
+        throw new Error(`Body type ${body.type} not supported`); 
+
+      return {
+        type: 'TextualBody',
+        purpose,
+        value: body.value,
+        creator: {
+          id: body.last_modified_by
+        }
+      };
+    };
+
+    return { 
+      '@context': 'http://www.w3.org/ns/anno.jsonld',
+      id: legacy.annotation_id,
+      type: 'Annotation',
+      body: legacy.bodies.map(toWebAnnoBody),
+      target: {
+        selector: [{
+          type: 'FragmentSelector',
+          conformsTo: 'http://www.w3.org/TR/media-frags/',
+          value: `xywh=pixel:${x},${y},${w},${h}`
+        }]
+      }
+    }
   }
 
   onCreateAnnotation = annotation => {
